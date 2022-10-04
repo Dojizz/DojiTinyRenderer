@@ -23,6 +23,7 @@ template <class t> struct Vec2 {
 template <class t> struct Vec3 {
 	union {
 		struct {t x, y, z;};
+		struct {t u, v, w;};
 		struct { t ivert, iuv, inorm; };
 		t raw[3];
 	};

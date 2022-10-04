@@ -49,6 +49,9 @@ struct TGAColor {
 			raw[i] = p[i];
 		}
 	}
+	TGAColor operator *(float intensity){
+		return TGAColor(this->r * intensity, this->g * intensity, this->b * intensity, this->a);
+	}
 
 	TGAColor & operator =(const TGAColor &c) {
 		if (this != &c) {

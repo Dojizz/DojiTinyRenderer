@@ -3,6 +3,7 @@
 #include "geometry.h"
 #include <vector>
 #include <cmath>
+#include <iostream>
 
 const TGAColor white = TGAColor(255, 255, 255, 255);
 const TGAColor red   = TGAColor(255, 0,   0,   255);
@@ -63,7 +64,9 @@ Vec3f barycentric(const Vec3i &v0, const Vec3i &v1, const Vec3i &v2, const Vec2i
 }
 
 // draw the triangle using barycentric coordinate
-void triangle(Vec3i v0, Vec3i v1, Vec3i v2, TGAImage &image, TGAColor color, std::vector<float> &zbuffer){
+void triangle(Vec3i v0, Vec3i v1, Vec3i v2,
+              Vec3f t0, Vec3f t1, Vec3f t2,
+              TGAImage &image, float intensity, std::vector<float> &zbuffer, TGAImage &texture){
     // get boouding box
     Vec2i maxV, minV;
     // max (x, y)
@@ -84,9 +87,16 @@ void triangle(Vec3i v0, Vec3i v1, Vec3i v2, TGAImage &image, TGAColor color, std
 
             // pixel in the triangle
             if(barycentric_coord.y >=0 && barycentric_coord.z >= 0 && barycentric_coord.x >= 0){
-                // the depth 
-                float z = barycentric_coord.y * v1.z + barycentric_coord.z * v2.z + barycentric_coord.x * v0.z;
+                // get the depth 
+                float z = barycentric_coord.x * v0.z + barycentric_coord.y * v1.z + barycentric_coord.z * v2.z;
+                // get the texture coordinate
+                float u = barycentric_coord.x * t0.u + barycentric_coord.y * t1.u + barycentric_coord.z * t2.u;
+                u *= texture.get_width();
+                float v = barycentric_coord.x * t0.v + barycentric_coord.y * t1.v + barycentric_coord.z * t2.v;
+                v *= texture.get_height();
                 if(z > zbuffer[x * width + y]){
+                    TGAColor color = texture.get((int)u, (int)v);
+                    color = color * intensity;
                     image.set(x, y, color);
                     zbuffer[x * width + y] = z;
                 }
@@ -97,25 +107,33 @@ void triangle(Vec3i v0, Vec3i v1, Vec3i v2, TGAImage &image, TGAColor color, std
 
 int main(int argc, char** argv) {
 
+    // load model
     if(argc >= 2){
         model = new Model(argv[1]);
     }
     else
-        model = new Model("obj/african_head.obj");
+        model = new Model("obj/african_head.obj"); 
 
+    // load texture, set parameter
     TGAImage image(width, height, TGAImage::RGB);
-    // never mind, for depth comparison, we do not care the precision, int is enough
+    TGAImage texture;
+    texture.read_tga_file("texture/african_head_diffuse.tga");
+    texture.flip_vertically();
     std::vector<float> zbuffer(width * height, -1000);
     Vec3f light_dir(0, 0, -1);
 
+    // draw per faces
     for(int i=0; i < model->nfaces(); i++){
         // fetch point data
         std::vector<int> face = model->face(i);
         Vec3i screen_coords[3];
         Vec3f world_coords[3];
+        Vec3f texture_coords[3];
         for(int j=0; j<3; j++){
-            world_coords[j] = model->vert(face[j]);
+            world_coords[j] = model->vert(face[2*j]);
             screen_coords[j] = Vec3i((world_coords[j].x + 1.)*width/2., (world_coords[j].y+1.)*height/2., (int)world_coords[j].z);
+            // must get texture coords of each vertex at here
+            texture_coords[j] = model->texture(face[2*j+1]);
         }
 
         // calculate light intensity
@@ -125,11 +143,14 @@ int main(int argc, char** argv) {
         normal.normalize();
         float intensity = normal * light_dir;
         if(intensity > 0){
-            TGAColor c(255 * intensity, 255 * intensity, 255 * intensity, 255);
-            triangle(screen_coords[0], screen_coords[1], screen_coords[2], image, c, zbuffer);
+            //TGAColor c(255 * intensity, 255 * intensity, 255 * intensity, 255);
+            triangle(screen_coords[0], screen_coords[1], screen_coords[2],
+                     texture_coords[0], texture_coords[1], texture_coords[2],
+                     image, intensity, zbuffer, texture);
         }
     }
 
+    // flip along the horizontal axis
     image.flip_vertically(); // i want to have the origin at the left bottom corner of the image
     image.write_tga_file("output.tga");
     return 0;
