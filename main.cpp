@@ -7,9 +7,9 @@
 const TGAColor white = TGAColor(255, 255, 255, 255);
 const TGAColor red   = TGAColor(255, 0,   0,   255);
 const TGAColor green = TGAColor(0,   255, 0,   255);
-// Model *model = NULL;
-const int width = 200;
-const int height = 200;
+Model *model = NULL;
+const int width = 800;
+const int height = 800;
 
 void line(int x0, int y0, int x1, int y1, TGAImage &image, TGAColor color) { 
     bool steep = false;
@@ -49,92 +49,80 @@ void line(int x0, int y0, int x1, int y1, TGAImage &image, TGAColor color) {
     }
 }
 
+// draw the triangle using barycentric coordinate
 void triangle(Vec2i v0, Vec2i v1, Vec2i v2, TGAImage &image, TGAColor color){
-    if(v0.x == v1.x && v1.x == v2.x) return;
-    // draw the triangle by column, first sort the point by x values
-    if(v0.x > v1.x) std::swap(v0, v1);
-    if(v0.x > v2.x) std::swap(v0, v2);
-    if(v1.x > v2.x) std::swap(v1, v2);
+    // get boouding box
+    Vec2i maxV, minV;
+    // max (x, y)
+    maxV.x = v0.x > v1.x ? v0.x : v1.x;
+    maxV.x = maxV.x > v2.x ? maxV.x : v2.x;
+    maxV.y = v0.y > v1.y ? v0.y : v1.y;
+    maxV.y = maxV.y > v2.y ? maxV.y : v2.y;
+    // min {x, y}
+    minV.x = v0.x < v1.x ? v0.x : v1.x;
+    minV.x = minV.x < v2.x ? minV.x : v2.x;
+    minV.y = v0.y < v1.y ? v0.y : v1.y;
+    minV.y = minV.y < v2.y ? minV.y : v2.y;
 
-    int total_width = v2.x - v0.x;
-    for(int x = v0.x; x <= v2.x; x++){
-        // check if phase one or phase two
-        bool if_second_phase = x >= v1.x;
-        int part_width = if_second_phase ? v2.x - v1.x : v1.x - v0.x;
-        Vec2i firstV = if_second_phase ? v1 : v0;
-        Vec2i secondV = if_second_phase ? v2 : v1;
+    // traverse in bouding box
+    for(int x = minV.x; x <= maxV.x; x++){
+        for(int y = minV.y; y <= maxV.y; y++){
+            // if (x, y) in triangle, v0->A, v1->B, v2->C
+            Vec3f vector1(v0.x - x, v1.x - v0.x, v2.x - v0.x);
+            Vec3f vector2(v0.y - y, v1.y - v0.y, v2.y - v0.y);
 
-        float t02 = (x - v0.x)/(float)(total_width);
-        int y02 = v0.y + (v2.y-v0.y) * t02;
-        float t = (x - firstV.x)/(float)(part_width);
-        int y_ = firstV.y + (secondV.y - firstV.y) * t;
+            // cross product to get (1, u, v)
+            Vec3f vector3 = vector1 ^ vector2;
+            // vector3.x = vector1.y * vector2.z - vector1.z * vector2.y;
+            // vector3.y = vector1.z * vector2.x - vector1.x * vector2.z;
+            // vector3.z = vector1.x * vector2.y - vector1.y * vector2.x;
+            vector3 = vector3 * (1 / vector3.x);
 
-        if(y_ > y02) std::swap(y_, y02);
-        for(int y = y_; y <= y02; y++)
-            image.set(x, y, color);
-
+            if(vector3.y >=0 && vector3.z >= 0 && vector3.y + vector3.z <= 1)
+                image.set(x, y, color);
+        }
     }
-
-    // // when v0.x == v1.x, skip the first part
-    // if(v0.x == v1.x){
-    //     int y0 = v0.y < v1.y ? v0.y : v1.y;
-    //     int y1 = v0.y > v1.y ? v0.y : v1.y;
-    //     for(int y = y0; y <= y1; y++){
-    //         image.set(v0.x, y, color);
-    //     }
-    // }
-
-    // // draw the first part
-    // else{
-    //     for(int x = v0.x; x <= v1.x; x++){
-    //         float t01 = (x - v0.x)/(float)(v1.x-v0.x);
-    //         int y01 = v0.y + (v1.y-v0.y)*t01;
-    //         float t02 = (x - v0.x)/(float)(v2.x-v0.x);
-    //         int y02 = v0.y + (v2.y-v0.y)*t02;
-            
-    //         // draw from small to large
-    //         if(y01 > y02)
-    //             std::swap(y01, y02);
-    //         for(int y=y01; y<=y02; y++)
-    //             image.set(x, y, color);
-    //     }
-    // }
-    
-    // // if v1.x == v2.x, skip the second part
-    // if(v1.x == v2.x){
-    //     int y0 = v1.y < v2.y ? v1.y : v2.y;
-    //     int y1 = v1.y > v2.y ? v1.y : v2.y;
-    //     for(int y = y0; y <= y1; y++){
-    //         image.set(v1.x, y, color);
-    //     }
-    // }
-    // else{
-    //     for(int x = v1.x+1; x <= v2.x; x++){
-    //         float t02 = (x - v0.x)/(float)(v2.x-v0.x);
-    //         int y02 = v0.y + (v2.y - v0.y)*t02;
-    //         float t12 = (x - v1.x)/(float)(v2.x-v1.x);
-    //         int y12 = v1.y + (v2.y - v1.y)*t12;
-
-    //         if(y02 > y12)
-    //             std::swap(y02, y12);
-    //         for(int y=y02; y<=y12; y++){
-    //             image.set(x, y, color);
-    //         }
-    //     }
-    // }
 }
 
 int main(int argc, char** argv) {
 
+    if(argc >= 2){
+        model = new Model(argv[1]);
+    }
+    else
+        model = new Model("obj/african_head.obj");
+
     TGAImage image(width, height, TGAImage::RGB);
+    Vec3f light_dir(0, 0, -1);
     
-    Vec2i t0[3] = {Vec2i(10, 70),   Vec2i(50, 160),  Vec2i(70, 80)};
-    Vec2i t1[3] = {Vec2i(180, 50),  Vec2i(150, 1),   Vec2i(70, 180)};
-    Vec2i t2[3] = {Vec2i(180, 150), Vec2i(120, 160), Vec2i(130, 180)};
-    triangle(t0[0], t0[1], t0[2], image, white);
-    triangle(t1[0], t1[1], t1[2], image, green);
-    triangle(t2[0], t2[1], t2[2], image, red);
-    
+    // Vec2i t0[3] = {Vec2i(10, 70),   Vec2i(50, 160),  Vec2i(70, 80)};
+    // Vec2i t1[3] = {Vec2i(180, 50),  Vec2i(150, 1),   Vec2i(70, 180)};
+    // Vec2i t2[3] = {Vec2i(180, 150), Vec2i(120, 160), Vec2i(130, 180)};
+    // triangle(t0[0], t0[1], t0[2], image, white);
+    // triangle(t1[0], t1[1], t1[2], image, green);
+    // triangle(t2[0], t2[1], t2[2], image, red);
+    for(int i=0; i < model->nfaces(); i++){
+        // fetch point data
+        std::vector<int> face = model->face(i);
+        Vec2i screen_coords[3];
+        Vec3f world_coords[3];
+        for(int j=0; j<3; j++){
+            world_coords[j] = model->vert(face[j]);
+            screen_coords[j] = Vec2i((world_coords[j].x + 1.)*width/2., (world_coords[j].y+1.)*height/2.);
+        }
+
+        // calculate light intensity
+        Vec3f vector1 = world_coords[1] - world_coords[0];
+        Vec3f vector2 = world_coords[2] - world_coords[0];
+        Vec3f normal = vector2 ^ vector1;
+        normal.normalize();
+        float intensity = normal * light_dir;
+        if(intensity > 0){
+            TGAColor c(255 * intensity, 255 * intensity, 255 * intensity, 255);
+            triangle(screen_coords[0], screen_coords[1], screen_coords[2], image, c);
+        }
+    }
+
     image.flip_vertically(); // i want to have the origin at the left bottom corner of the image
     image.write_tga_file("output.tga");
     return 0;
