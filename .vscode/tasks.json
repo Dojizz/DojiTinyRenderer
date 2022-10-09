@@ -8,6 +8,8 @@
             "args": [    //方括号里是传给gcc命令的一系列参数，用于实现一些功能
 				"${workspaceFolder}\\model.cpp",
                 "${workspaceFolder}\\tgaimage.cpp",
+                "${workspaceFolder}\\geometry.cpp",
+                "${workspaceFolder}\\camera.cpp",
 				"${workspaceFolder}\\main.cpp", //指定要编译的是当前文件
                 "-o", //指定输出文件的路径和名称
                 "${fileDirname}\\bin\\${fileBasenameNoExtension}.exe", //承接上一步的-o，让可执行文件输出到源码文件所在的文件夹下的bin文件夹内，并且让它的名字和源码文件相同

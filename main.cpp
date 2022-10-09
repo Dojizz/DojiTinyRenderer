@@ -1,6 +1,7 @@
 #include "tgaimage.h"
 #include "model.h"
 #include "geometry.h"
+#include "camera.h"
 #include <vector>
 #include <cmath>
 #include <iostream>
@@ -10,8 +11,17 @@ const TGAColor red   = TGAColor(255, 0,   0,   255);
 const TGAColor green = TGAColor(0,   255, 0,   255);
 const TGAColor blue  = TGAColor(0,   0,   255, 255);
 Model *model = NULL;
+Vec3f camera(0, 0, 3);
 const int width = 800;
 const int height = 800;
+const int smallest_depth = -1000;
+// define camera
+Camera camera1(Vec3f(0.f, 0.f, 3.f));
+
+// define model matrix
+Matrix model = Matrix::modelTrans();
+Matrix viewport = Matrix::viewportTrans(width, height);
+
 
 void line(Vec2i v0, Vec2i v1, TGAImage &image, TGAColor color) { 
     int x0 = v0.x, y0 = v0.y, x1 = v1.x, y1 = v1.y;
@@ -119,9 +129,13 @@ int main(int argc, char** argv) {
     TGAImage texture;
     texture.read_tga_file("texture/african_head_diffuse.tga");
     texture.flip_vertically();
-    std::vector<float> zbuffer(width * height, -1000);
+    std::vector<float> zbuffer(width * height, smallest_depth);
     Vec3f light_dir(0, 0, -1);
 
+    //matrix
+    Matrix projection = Matrix::identity(4);
+    projection[3][2] = -1.f / camera.z;
+    
     // draw per faces
     for(int i=0; i < model->nfaces(); i++){
         // fetch point data
@@ -131,7 +145,10 @@ int main(int argc, char** argv) {
         Vec3f texture_coords[3];
         for(int j=0; j<3; j++){
             world_coords[j] = model->vert(face[2*j]);
+            // orthographic projection
             screen_coords[j] = Vec3i((world_coords[j].x + 1.)*width/2., (world_coords[j].y+1.)*height/2., (int)world_coords[j].z);
+            // perspective projection
+            
             // must get texture coords of each vertex at here
             texture_coords[j] = model->texture(face[2*j+1]);
         }
