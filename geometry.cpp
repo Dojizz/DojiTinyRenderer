@@ -3,6 +3,26 @@
 #include <cassert>
 #include "geometry.h"
 
+Vec4f Vec3ToVec4(const Vec3f v, bool isPoint = true){
+    if(isPoint){
+        return Vec4f(v.x, v.y, v.z, 1.f);
+    }
+    else{
+        return Vec4f(v.x, v.y, v.z, 0.f);
+    }
+}
+
+Vec3f Vec4ToVec3(const Vec4f v){
+    // vector
+    if(abs(v.w) < 1e-6){
+        return Vec3f(v.x, v.y, v.z);
+    }
+    // point
+    else{
+        return Vec3f(v.x/v.w, v.y/v.w, v.z/v.w);
+    }
+}
+
 int Matrix::nrows(){ return this->rows;}
 int Matrix::ncols(){ return this->cols;}
 
@@ -30,7 +50,7 @@ Matrix Matrix::operator*(const Matrix &m){
     return result;
 }
 
-Vec4f Matrix::operator*(Vec4f &vector){
+Vec4f Matrix::operator*(Vec4f vector){
     assert(this->rows == 4 && this->cols == 4);
     Vec4f result;
     for(int i = 0; i < this->rows; i++){

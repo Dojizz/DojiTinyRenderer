@@ -19,8 +19,11 @@ const int smallest_depth = -1000;
 Camera camera1(Vec3f(0.f, 0.f, 3.f));
 
 // define model matrix
-Matrix model = Matrix::modelTrans();
-Matrix viewport = Matrix::viewportTrans(width, height);
+Matrix modelTrans = Matrix::modelTrans();
+Matrix cameraTrans = camera1.getCameraTrans();
+Matrix projTrans = camera1.getProjTrans();
+Matrix viewportTrans = Matrix::viewportTrans(width, height);
+Matrix transformation = viewportTrans * projTrans * cameraTrans * modelTrans;
 
 
 void line(Vec2i v0, Vec2i v1, TGAImage &image, TGAColor color) { 
@@ -140,22 +143,22 @@ int main(int argc, char** argv) {
     for(int i=0; i < model->nfaces(); i++){
         // fetch point data
         std::vector<int> face = model->face(i);
-        Vec3i screen_coords[3];
-        Vec3f world_coords[3];
+        // coords in screen space
+        Vec3f screen_coords[3];
+        // coords in model space
+        Vec3f model_coords[3];
         Vec3f texture_coords[3];
         for(int j=0; j<3; j++){
-            world_coords[j] = model->vert(face[2*j]);
-            // orthographic projection
-            screen_coords[j] = Vec3i((world_coords[j].x + 1.)*width/2., (world_coords[j].y+1.)*height/2., (int)world_coords[j].z);
-            // perspective projection
-            
+            model_coords[j] = model->vert(face[2*j]);
+            // transfer local model coords to screen space coords 
+            screen_coords[j] = Vec4ToVec3(transformation * Vec3ToVec4(model_coords[j]));
             // must get texture coords of each vertex at here
             texture_coords[j] = model->texture(face[2*j+1]);
         }
 
-        // calculate light intensity
-        Vec3f vector1 = world_coords[1] - world_coords[0];
-        Vec3f vector2 = world_coords[2] - world_coords[0];
+        // calculate light intensity, normal points to the inner side
+        Vec3f vector1 = model_coords[1] - model_coords[0];
+        Vec3f vector2 = model_coords[2] - model_coords[0];
         Vec3f normal = vector2 ^ vector1;
         normal.normalize();
         float intensity = normal * light_dir;

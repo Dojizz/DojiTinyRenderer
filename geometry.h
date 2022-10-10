@@ -95,6 +95,11 @@ template <class t> std::ostream& operator<<(std::ostream& s, Vec4<t>& v) {
 	return s;
 }
 
+// vec3f to vec4f
+Vec4f Vec3ToVec4(const Vec3f v, bool isPoint = true);
+// inverse
+Vec3f Vec4ToVec3(const Vec4f v);
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 const int DEFAULT_ALLOC = 4;
 
@@ -114,7 +119,7 @@ class Matrix {
 		// * operator with matrix
 		Matrix operator*(const Matrix &m);
 		// * operator with vector, only support 4x4 * 4*1 
-		Vec4f operator*(Vec4f &vector);
+		Vec4f operator*(Vec4f vector);
 		// + operator
 		Matrix operator+(const Matrix &m);
 		// inverse
