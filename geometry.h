@@ -130,7 +130,7 @@ class Matrix {
 		static Matrix modelTrans();
 		static Matrix viewportTrans(const int width, const int height);
 		// output
-		friend std::ostream& operator<<(std::ostream &s, const Matrix &m);
+		friend std::ostream& operator<<(std::ostream &s, Matrix &m);
 
 };
 

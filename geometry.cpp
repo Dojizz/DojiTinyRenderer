@@ -3,7 +3,7 @@
 #include <cassert>
 #include "geometry.h"
 
-Vec4f Vec3ToVec4(const Vec3f v, bool isPoint = true){
+Vec4f Vec3ToVec4(const Vec3f v, bool isPoint){
     if(isPoint){
         return Vec4f(v.x, v.y, v.z, 1.f);
     }
@@ -26,7 +26,7 @@ Vec3f Vec4ToVec3(const Vec4f v){
 int Matrix::nrows(){ return this->rows;}
 int Matrix::ncols(){ return this->cols;}
 
-Matrix::Matrix(int r = DEFAULT_ALLOC, int c = DEFAULT_ALLOC){
+Matrix::Matrix(int r, int c){
     this->rows = r;
     this->cols = c;
     data = std::vector<std::vector<float>>(r, std::vector<float>(c, 0.f));
@@ -87,7 +87,7 @@ Matrix Matrix::inverse(){
     return Matrix(this->rows, this->cols);
 }
 
-Matrix Matrix::identity(int dimensions = DEFAULT_ALLOC){
+Matrix Matrix::identity(int dimensions){
     Matrix result(dimensions, dimensions);
     for(int i = 0; i < dimensions; i++){
         result[i][i] = 1.0f;
@@ -95,7 +95,7 @@ Matrix Matrix::identity(int dimensions = DEFAULT_ALLOC){
     return result;
 }
 
-Matrix Matrix::zeros(int dimensions = DEFAULT_ALLOC){
+Matrix Matrix::zeros(int dimensions){
     Matrix result(dimensions, dimensions);
     return result;
 }

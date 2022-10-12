@@ -6,7 +6,7 @@ enum projectionClass {ORTHOGONAL, PERSPECTIVE};
 const Vec3f DEFAULT_CENTER(0.f, 0.f, 0.f);
 const Vec3f DEFAULT_LOOKAT(0.f, 0.f, -1.f);
 const Vec3f DEFAULT_UP(0.f, 1.f, 0.f);
-const float DEFAULT_NEAR = -1, DEFAULT_FAR = -100;
+const float DEFAULT_NEAR = -0.5, DEFAULT_FAR = -100;
 const float DEFAULT_THETA = 60, DEFAULT_RATIO = 1.0;
 const projectionClass DEFAULT_PROJ = PERSPECTIVE;
 

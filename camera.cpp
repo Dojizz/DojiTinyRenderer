@@ -2,9 +2,9 @@
 #include "geometry.h"
 #include "camera.h"
 
-Camera::Camera(Vec3f c = DEFAULT_CENTER, Vec3f l = DEFAULT_LOOKAT, Vec3f u = DEFAULT_UP,
-               float n = DEFAULT_NEAR, float f = DEFAULT_FAR, float t = DEFAULT_THETA,
-               float r = DEFAULT_RATIO, projectionClass p = DEFAULT_PROJ){
+Camera::Camera(Vec3f c , Vec3f l , Vec3f u ,
+               float n , float f , float t ,
+               float r , projectionClass p){
     this->centerPosition = c;
     this->lookAt = l;
     this->up = u;
@@ -27,9 +27,9 @@ Matrix Camera::getCameraTrans(){
     Vec3f v = w ^ u;
     v.normalize();
     Matrix moveToCenter = Matrix::identity();
-    for(int i = 0; i < 3; i++) moveToCenter[i][3] = moveToCenter[i][3] - this->centerPosition[i];
+    for(int i = 0; i < 3; i++) moveToCenter[i][3] = -this->centerPosition[i];
     Matrix moveDirec = Matrix::zeros();
-    moveDirec[3][3] = 0.f;
+    moveDirec[3][3] = 1.f;
     for(int i = 0; i < 3; i++){
         moveDirec[0][i] = u[i];
         moveDirec[1][i] = v[i];
