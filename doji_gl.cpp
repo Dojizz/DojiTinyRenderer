@@ -87,7 +87,7 @@ void triangle(Vec3f v0, Vec3f v1, Vec3f v2,
                 v *= texture.get_height();
                 if(z > zbuffer[x * width + y]){
                     TGAColor color = texture.get((int)u, (int)v);
-                    color = color * intensity;
+                    color = color * (intensity > 0  ? intensity : 0);
                     image.set(x, y, color);
                     // generate depth map
                     // int z_color = (z + 1) * 255 / 2;
@@ -97,4 +97,10 @@ void triangle(Vec3f v0, Vec3f v1, Vec3f v2,
             }
         }
     }
+}
+
+// some self-defined shader
+class GouraudShader : public DojiShader {
+    // intensity calculated by vertex shader, used by 
+    Vec3f varying_intensity;
 }

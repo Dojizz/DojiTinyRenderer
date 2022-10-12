@@ -7,11 +7,10 @@
 #include <cmath>
 #include <iostream>
 
-const TGAColor white = TGAColor(255, 255, 255, 255);
-const TGAColor red   = TGAColor(255, 0,   0,   255);
-const TGAColor green = TGAColor(0,   255, 0,   255);
-const TGAColor blue  = TGAColor(0,   0,   255, 255);
-Model *model = NULL;
+// define default model, texture path
+const char *modelPath = "obj/african_head.obj";
+const char *texturePath = "texture/african_head_diffuse.tga";
+// define image
 const int width = 800;
 const int height = 800;
 const int smallest_depth = -1000;
@@ -28,26 +27,26 @@ Matrix transformation = viewportTrans * projTrans * cameraTrans * modelTrans;
 
 int main(int argc, char** argv) {
 
-    // std::cout << modelTrans << '\n';
-    // std::cout << cameraTrans << '\n';
-    // std::cout << projTrans << '\n';
-    // std::cout << viewportTrans << '\n';
-    // std:: cout << transformation << '\n';
-
     // load model
+    Model *model = nullptr;
     if(argc >= 2){
         model = new Model(argv[1]);
     }
     else
-        model = new Model("obj/african_head.obj"); 
+        model = new Model(modelPath); 
 
     // load texture, set parameter
-    TGAImage image(width, height, TGAImage::RGB);
     TGAImage texture;
-    texture.read_tga_file("texture/african_head_diffuse.tga");
+    texture.read_tga_file(texturePath);
     texture.flip_vertically();
+
+    light_dir.normalize();
+
+    // define z-buffer, image object
     std::vector<float> zbuffer(width * height, smallest_depth);
-    
+    TGAImage image(width, height, TGAImage::RGB);
+    TGAImage zbuffer1(width, height, TGAImage::GRAYSCALE);
+
     // draw per faces
     for(int i=0; i < model->nfaces(); i++){
         // fetch point data
@@ -71,16 +70,18 @@ int main(int argc, char** argv) {
         Vec3f normal = vector2 ^ vector1;
         normal.normalize();
         float intensity = normal * light_dir;
-        if(intensity > 0){
-            //TGAColor c(255 * intensity, 255 * intensity, 255 * intensity, 255);
-            triangle(screen_coords[0], screen_coords[1], screen_coords[2],
-                     texture_coords[0], texture_coords[1], texture_coords[2],
-                     image, intensity, zbuffer, texture, width, height);
-        }
+        
+        //TGAColor c(255 * intensity, 255 * intensity, 255 * intensity, 255);
+        triangle(screen_coords[0], screen_coords[1], screen_coords[2],
+                    texture_coords[0], texture_coords[1], texture_coords[2],
+                    image, intensity, zbuffer, texture, width, height);
+        
     }
 
     // flip along the horizontal axis
     image.flip_vertically(); // i want to have the origin at the left bottom corner of the image
     image.write_tga_file("image/output.tga");
+
+    delete model;
     return 0;
 }
