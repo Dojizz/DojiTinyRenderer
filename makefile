@@ -1,22 +1,35 @@
-SYSCONF_LINK = g++
-CPPFLAGS     = 
-LDFLAGS      =
-LIBS         = -lm
+# "${workspaceFolder}\\tgaimage.cpp",
+#                 "${workspaceFolder}\\geometry.cpp",
+#                 "${workspaceFolder}\\model.cpp",
+#                 "${workspaceFolder}\\camera.cpp",
+#                 "${workspaceFolder}\\doji_gl.cpp",
+# 				"${workspaceFolder}\\main.cpp", //指定要编译的是当前文件
 
-DESTDIR = ./
-TARGET  = main
+SHELL=cmd.exe
 
-OBJECTS := $(patsubst %.cpp,%.o,$(wildcard *.cpp))
+objects = main.o doji_gl.o camera.o \
+		model.o geometry.o tgaimage.o
 
-all: $(DESTDIR)$(TARGET)
+main : $(objects)
+	g++ $(objects) -o bin\main -g 
 
-$(DESTDIR)$(TARGET): $(OBJECTS)
-	$(SYSCONF_LINK) -Wall $(LDFLAGS) -o $(DESTDIR)$(TARGET) $(OBJECTS) $(LIBS)
+main.o : main.cpp tgaimage.h model.h geometry.h camera.h doji_gl.h
+	g++ -c main.cpp -o main.o
 
-$(OBJECTS): %.o: %.cpp
-	$(SYSCONF_LINK) -Wall $(CPPFLAGS) -c $(CFLAGS) $< -o $@
+doji_gl.o : doji_gl.cpp doji_gl.h
+	g++ -c doji_gl.cpp -o doji.o
+
+camera.o : geometry.h camera.h camera.cpp
+	g++ -c camera.cpp -o camera.o
+
+model.o : model.h geometry.h model.cpp
+	g++ -c model.cpp -o model.o
+
+geometry.o : geometry.h geometry.cpp
+	g++ -c geometry.cpp -o geometry.o
+
+tgaimage.o : tgaimage.cpp tgaimage.h
+	g++ -c tgaimage.cpp -o tgaimage.o
 
 clean:
-	-rm -f $(OBJECTS)
-	-rm -f $(TARGET)
-	-rm -f *.tga
+	del bin\main.exe, $(objects)

@@ -103,4 +103,4 @@ void triangle(Vec3f v0, Vec3f v1, Vec3f v2,
 class GouraudShader : public DojiShader {
     // intensity calculated by vertex shader, used by 
     Vec3f varying_intensity;
-}
+};
